@@ -93,9 +93,10 @@ class EcoFlowMainDevice(EcoFlowDevice):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, serial: str):
         super().__init__()
+        data = entry.data[serial]
         self.data: EcoFlowData = hass.data[DOMAIN]
-        self._tcp = RxTcpAutoConnection(entry.data[CONF_HOST], ef.PORT)
-        self.product: int = entry.data[CONF_PRODUCT]
+        self._tcp = RxTcpAutoConnection(data[CONF_HOST], ef.PORT)
+        self.product: int = data[CONF_PRODUCT]
         self.serial = serial
         self.serial_extra = dict[int, str]()
         self.sem_extra = Semaphore(1)
@@ -108,7 +109,7 @@ class EcoFlowMainDevice(EcoFlowDevice):
             manufacturer="EcoFlow",
             name=f"{ef.get_model_name(self.product)} {serial[-6:]}",
         )
-        if mac := entry.data.get(CONF_MAC, None):
+        if mac := data.get(CONF_MAC, None):
             self.device_info["connections"] = {
                 (CONNECTION_NETWORK_MAC, mac),
             }
@@ -412,10 +413,9 @@ async def _entry_updated(hass: HomeAssistant, entry: ConfigEntry):
         device = data.devices.pop(serial)
         entry.async_create_task(hass, device.close())
 
-    serial = 'host'
-    if serial in entry.data:
+    for serial in entry.data:
         if serial in data.devices:
-            return
+            continue
         device = EcoFlowMainDevice(hass, entry, serial)
         data.devices[serial] = device
         data.device_added.on_next(device)
