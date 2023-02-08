@@ -37,7 +37,6 @@ class EcoflowConfigFlow(ConfigFlow, domain=DOMAIN):
                 data[CONF_MAC] = self.mac
             self._abort_if_unique_id_configured({serial: data}, False)
         await self.async_set_unique_id(serial)
-
         return info
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo):
